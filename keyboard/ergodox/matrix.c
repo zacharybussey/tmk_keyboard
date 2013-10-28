@@ -49,6 +49,12 @@ static void select_row(uint8_t row);
 
 static uint8_t mcp23018_reset_loop;
 
+uint8_t led_left            = (1<<2 | 1<<1 | 1<<0);
+uint8_t led_right           = (1<<2 | 1<<1 | 1<<0);
+uint8_t led_side            = 0;
+uint8_t led_counter         = 0;
+uint8_t led_counter_max     = 10;
+
 #ifdef DEBUG_MATRIX_FREQ
 uint32_t matrix_timer;
 uint32_t matrix_scan_count;
@@ -70,7 +76,7 @@ void matrix_init(void)
 {
     // initialize row and col
     init_ergodox();
-    mcp23018_status = init_mcp23018();
+    mcp23018_status = 1;
     ergodox_blink_all_leds();
     unselect_rows();
     init_cols();
@@ -89,26 +95,22 @@ void matrix_init(void)
 
 uint8_t matrix_scan(void)
 {
-    if (mcp23018_status) { // if there was an error
-        if (++mcp23018_reset_loop == 0) {
-            // since mcp23018_reset_loop is 8 bit - we'll try to reset once in 255 matrix scans
-            // this will be approx bit more frequent than once per second
-            print("trying to reset mcp23018\n");
-            mcp23018_status = init_mcp23018();
-            if (mcp23018_status) {
-                print("left side not responding\n");
-            } else {
-                print("left side attached\n");
-                ergodox_blink_all_leds();
-            }
-        }
-    }
-
 #ifdef DEBUG_MATRIX_FREQ
     matrix_scan_count++;
 
     uint32_t timer_now = timer_read32();
     if (TIMER_DIFF_32(timer_now, matrix_timer)>1000) {
+        phex(led_right);
+        print("/");
+        phex(led_right<<4);
+        print(":");
+        phex(led_left);
+        print("/");
+        phex(led_left<<4);
+        print(":");
+        pdec(led_counter_max);
+        print(", ");
+
         print("matrix scan frequency: ");
         pdec(matrix_scan_count);
         print("\n");
@@ -119,46 +121,129 @@ uint8_t matrix_scan(void)
 #endif
 
 #ifdef KEYMAP_CUB
-    uint8_t layer = biton32(layer_state);
+    if (led_counter == 0) {
+        led_counter = led_counter_max;
 
-    ergodox_board_led_off();
-    ergodox_left_led_1_off();
-    ergodox_left_led_2_off();
-    ergodox_left_led_3_off();
-    switch (layer) {
-        case 1:
-            // all
-            ergodox_left_led_1_on();
-            ergodox_left_led_2_on();
-            ergodox_left_led_3_on();
-            break;
-        case 2:
-            // blue
-            ergodox_left_led_2_on();
-            break;
-        case 8:
-            // blue and green
-            ergodox_left_led_2_on();
-            // break missed intentionally
-        case 3:
-            // green
-            ergodox_left_led_3_on();
-            break;
-        case 6:
-            ergodox_board_led_on();
-            // break missed intentionally
-        case 4:
-        case 5:
-        case 7:
-            // red
-            ergodox_left_led_1_on();
-            break;
-        default:
-            // none
-            break;
+        if (led_side) {
+            led_side = 0;
+
+            DDRB  |=  (1<<7 | 1<<6 | 1<<5 | 1<<4);
+            PORTB &= ~(1<<7 | 1<<6 | 1<<5 | 1<<4);
+            PORTB |=  (led_left<<4);
+        } else {
+            led_side = 1;
+
+            DDRB  |=  (1<<7 | 1<<6 | 1<<5 | 1<<4);
+            PORTB &= ~(1<<6 | 1<<5 | 1<<4);
+            PORTB |=  ((1<<7 | 1<<6 | 1<<5 | 1<<4)^(led_right<<4));
+        }
+    } else {
+        led_counter--;
+    }
+#endif
+
+#ifdef KEYMAP_CUB1
+    // on many registers - ok
+    if (led_counter == 0) {
+        led_counter = led_counter_max;
+
+        if (led_side) {
+            led_side = 0;
+
+            uint32_t led;
+            if (led_left & (1<<1)) { led = 1; } else { led = 0; }
+            // led D7 - output; high/low output
+            DDRD  |=  (1<<7);
+            PORTD &= ~(1<<7);
+            PORTD |=  (led<<7);
+
+            DDRB  |=  (1<<6 | 1<<5 | 1<<4);
+            PORTB &= ~(1<<6 | 1<<5 | 1<<4);
+            PORTB |=  (led_left<<4);
+
+            // gnd C7 - output; low output
+            DDRC  |=  (1<<7);
+            PORTC &= ~(1<<7);
+        } else {
+            led_side = 1;
+
+            uint32_t led;
+            if (led_right & (1<<1)) { led = 1; } else { led = 0; }
+            // led D7 - output; low/high output
+            DDRD  |=  (1<<7);
+            PORTD &= ~(1<<7);
+            PORTD |=  ((1^led)<<7);
+
+            DDRB  |=  (1<<6 | 1<<5 | 1<<4);
+            PORTB &= ~(1<<6 | 1<<5 | 1<<4);
+            PORTB |=  ((1<<6 | 1<<5 | 1<<4)^(led_right<<4));
+
+            // gnd C7 - output; high output
+            DDRC  |=  (1<<7);
+            PORTC |=  (1<<7);
+        }
+
+        _delay_ms(5);
+    } else {
+        led_counter--;
     }
 
-    mcp23018_status = ergodox_left_leds_update();
+        // on
+        //DDRB |=  (1<<5); PORTB |=  (1<<5);
+        //DDRB |=  (1<<6); PORTB |=  (1<<6);
+        //DDRB |=  (1<<7); PORTB |=  (1<<7);
+        //
+        // off
+        //DDRB &= ~(1<<5); PORTB &= ~(1<<5);
+        //DDRB &= ~(1<<6); PORTB &= ~(1<<6);
+        //DDRB &= ~(1<<7); PORTB &= ~(1<<7);
+        //
+
+        // D7 - led
+        // C7 - Gnd
+
+        //uint32_t led;
+        //if (led_left & (1<<0)) {
+        //    led = 1;
+        //} else {
+        //    led = 0;
+        //}
+
+        // 1
+        // led - output; high/low output
+        // DDRD  |=  (1<<7);
+        // PORTD &= ~(1<<7);
+        // PORTD |=  (led<<7);
+        // gnd - output; high output
+        // DDRC  |=  (1<<7);
+        // PORTC |=  (1<<7);
+
+        // 2
+        // led - output; high/low output
+        // DDRD  |=  (1<<7);
+        // PORTD &= ~(1<<7);
+        // PORTD |=  (led<<7);
+        // gnd - output; low output
+        // DDRC  |=  (1<<7);
+        // PORTC &= ~(1<<7);
+
+        // 3
+        // led - output; high/low output
+        // DDRD  |=  (1<<7);
+        // PORTD &= ~(1<<7);
+        // PORTD |=  (led<<7);
+        // gnd - input; pull-up
+        // DDRC  &= ~(1<<7);
+        // PORTC |=  (1<<7);
+
+        // 4
+        // led - output; high/low output
+        // DDRD  |=  (1<<7);
+        // PORTD &= ~(1<<7);
+        // PORTD |=  (led<<7);
+        // gnd - input; normal
+        // DDRC  &= ~(1<<7);
+        // PORTC &= ~(1<<7);
 #endif
 
     for (uint8_t i = 0; i < MATRIX_ROWS; i++) {
@@ -228,11 +313,11 @@ uint8_t matrix_key_count(void)
  *
  * Teensy
  * col: 0   1   2   3   4   5
- * pin: F0  F1  F4  F5  F6  F7 
+ * pin: F0  F1  F4  F5  F6  F7
  *
  * MCP23018
  * col: 0   1   2   3   4   5
- * pin: B5  B4  B3  B2  B1  B0 
+ * pin: B5  B4  B3  B2  B1  B0
  */
 static void  init_cols(void)
 {
@@ -321,7 +406,7 @@ static void select_row(uint8_t row)
             // set other rows hi-Z : 1
             mcp23018_status = i2c_start(I2C_ADDR_WRITE);        if (mcp23018_status) goto out;
             mcp23018_status = i2c_write(GPIOA);                 if (mcp23018_status) goto out;
-            mcp23018_status = i2c_write( 0xFF & ~(1<<row) 
+            mcp23018_status = i2c_write( 0xFF & ~(1<<row)
                                   & ~(ergodox_left_led_3<<LEFT_LED_3_SHIFT)
                               );                                if (mcp23018_status) goto out;
         out:

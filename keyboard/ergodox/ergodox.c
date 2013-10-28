@@ -48,20 +48,20 @@ bool ergodox_left_led_3 = 0;  // left bottom
 void init_ergodox(void)
 {
     // keyboard LEDs (see "PWM on ports OC1(A|B|C)" in "teensy-2-0.md")
-    TCCR1A = 0b10101001;  // set and configure fast PWM
-    TCCR1B = 0b00001001;  // set and configure fast PWM
+    // TCCR1A = 0b10101001;  // set and configure fast PWM
+    // TCCR1B = 0b00001001;  // set and configure fast PWM
 
     // (tied to Vcc for hardware convenience)
-    DDRB  &= ~(1<<4);  // set B(4) as input
-    PORTB &= ~(1<<4);  // set B(4) internal pull-up disabled
+    // DDRB  &= ~(1<<4);  // set B(4) as input
+    // PORTB &= ~(1<<4);  // set B(4) internal pull-up disabled
 
     // unused pins - C7, D4, D5, D7, E6
     // set as input with internal pull-ip enabled
-    DDRC  &= ~(1<<7);
-    DDRD  &= ~(1<<7 | 1<<5 | 1<<4);
+    // DDRC  &= ~(1<<7);
+    // DDRD  &= ~(1<<7 | 1<<5 | 1<<4);
     DDRE  &= ~(1<<6);
-    PORTC |=  (1<<7);
-    PORTD |=  (1<<7 | 1<<5 | 1<<4);
+    // PORTC |=  (1<<7);
+    // PORTD |=  (1<<7 | 1<<5 | 1<<4);
     PORTE |=  (1<<6);
 }
 
@@ -76,6 +76,7 @@ void ergodox_blink_all_leds(void)
 
 uint8_t init_mcp23018(void) {
     mcp23018_status = 0x20;
+    return;
 
     // I2C subsystem
     if (i2c_initialized == 0) {
@@ -112,6 +113,9 @@ out:
 }
 
 uint8_t ergodox_left_leds_update(void) {
+    mcp23018_status = 0x20;
+    return;
+
     if (mcp23018_status) { // if there was an error
         return mcp23018_status;
     }
