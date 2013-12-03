@@ -79,6 +79,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "keymap_colemak.h"
 #elif defined(KEYMAP_WORKMAN)
 #include "keymap_workman.h"
+#elif defined(KEYMAP_MICRO)
+#include "keymap_micro.h"
 #elif defined(KEYMAP_CUB)
 #include "keymap_cub.h"
 #else
@@ -87,18 +89,18 @@ static const uint8_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KEYMAP(  // layer 0 : default
         // left hand
         EQL, 1,   2,   3,   4,   5,   ESC,
-        BSLS,Q,   W,   E,   R,   T,   FN2,
-        TAB, A,   S,   D,   F,   G,
+        BSLS,Q,   W,   F,   P,   G,   FN2,
+        TAB, A,   R,   S,   T,   D,
         LSFT,Z,   X,   C,   V,   B,   FN1,
-        LGUI,GRV, BSLS,LEFT,RGHT,
+        LALT,GRV, BSLS,LEFT,RGHT,
                                       LCTL,LALT,
                                            HOME,
                                  BSPC,DEL, END,
         // right hand
              FN3, 6,   7,   8,   9,   0,   MINS,
-             LBRC,Y,   U,   I,   O,   P,   RBRC,
-                  H,   J,   K,   L,   SCLN,QUOT,
-             FN1, N,   M,   COMM,DOT, SLSH,RSFT,
+             LBRC,J,   L,   U,   Y,   SCLN,RBRC,
+                  H,   N,   E,   I,   O,   QUOT,
+             FN1, K,   M,   COMM,DOT, SLSH,RSFT,
                        LEFT,DOWN,UP,  RGHT,RGUI,
         RALT,RCTL,
         PGUP,
@@ -108,18 +110,18 @@ static const uint8_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KEYMAP(  // layer 1 : function and symbol keys
         // left hand
         TRNS,F1,  F2,  F3,  F4,  F5,  F11,
-        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,FN4,
-        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,
-        TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,
+        TRNS,TRNS,FN20, FN5, FN6,TRNS,FN4,
+        TRNS,BSLS,SLSH,LBRC,RBRC,FN17,
+        TRNS,TRNS,TRNS,FN19,FN18, GRV,TRNS,
         TRNS,TRNS,TRNS,TRNS,TRNS,
                                       TRNS,TRNS,
                                            TRNS,
                                  TRNS,TRNS,TRNS,
         // right hand
-             F12, F6,  F7,  F8,  F9,  F10, TRNS,
-             TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,
-                  TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,
-             TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,TRNS,
+             F12, F6,  F7,  F8,  F9,  F10, F11,
+             TRNS,FN13, FN7, FN8, EQL,FN14,TRNS,
+                  FN12,FN10,FN11,MINS,TRNS,TRNS,
+             TRNS,FN11,FN15,FN16,QUOT,TRNS,TRNS,
                        TRNS,TRNS,TRNS,TRNS,TRNS,
         TRNS,TRNS,
         TRNS,
@@ -184,6 +186,22 @@ static const uint16_t PROGMEM fn_actions[] = {
     ACTION_LAYER_SET(2, ON_PRESS),                  // FN2 - push Layer2
     ACTION_LAYER_SET(3, ON_PRESS),                  // FN3 - push Layer3
     ACTION_LAYER_SET(0, ON_PRESS),                  // FN4 - push Layer0
+    ACTION_MODS_KEY(MOD_LSFT, KC_LBRC),				// FN5 - Left square brace
+    ACTION_MODS_KEY(MOD_LSFT, KC_RBRC),				// FN6 - Right square brace
+    ACTION_MODS_KEY(MOD_LSFT, KC_COMM),				// FN7 - Left Angle Bracket
+    ACTION_MODS_KEY(MOD_LSFT, KC_DOT),				// FN8 - Right Angle Bracket
+    ACTION_MODS_KEY(MOD_LSFT, KC_9), 				// FN9 - Left Paren
+    ACTION_MODS_KEY(MOD_LSFT, KC_0),				// FN10 - Right Paren
+    ACTION_MODS_KEY(MOD_LSFT, KC_EQL),				// FN11 - Plus
+    ACTION_MODS_KEY(MOD_LSFT, KC_SLSH),				// FN12 - Question Mark
+    ACTION_MODS_KEY(MOD_LSFT, KC_1), 				// FN13 - Exclaim
+    ACTION_MODS_KEY(MOD_LSFT, KC_7),				// FN14 - &
+    ACTION_MODS_KEY(MOD_LSFT, KC_5),				// FN15 - %
+    ACTION_MODS_KEY(MOD_LSFT, KC_QUOT),				// FN16 - "
+    ACTION_MODS_KEY(MOD_LSFT, KC_8),				// FN17 - *
+    ACTION_MODS_KEY(MOD_LSFT, KC_GRV),				// FN18 - Squiggle ~
+    ACTION_MODS_KEY(MOD_LSFT, KC_BSLS),				// FN19 - Pipe
+    ACTION_MODS_KEY(MOD_LSFT, KC_MINS),				// FN20 - Underscore
 };
 
 void action_function(keyrecord_t *event, uint8_t id, uint8_t opt)
